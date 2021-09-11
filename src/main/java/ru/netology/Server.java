@@ -15,7 +15,7 @@ public class Server {
 
     private static final int NUMBER_OF_THREADS = 64;
     private int portNumber;
-    private static Server server =null;
+    private static volatile Server server =null;
     private Map<String,Map<String,Handler>> handlers = new ConcurrentHashMap<>();
 
     public Server(int portNumber) {
@@ -45,7 +45,6 @@ public class Server {
         try {
         if (handlers.containsKey(request.getMethod())){
             if (handlers.get(request.getMethod()).containsKey(request.getPath())){
-
                     handlers.get(request.getMethod()).get(request.getPath()).handle(request,out);
                 return;
             }
