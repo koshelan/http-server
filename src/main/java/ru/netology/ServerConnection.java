@@ -26,7 +26,7 @@ public class ServerConnection implements Runnable {
             // read only request line for simplicity
             // must be in form GET /path HTTP/1.1
             final var requestLine = in.readLine();
-            if (!requestLine.isEmpty()) {
+            if (requestLine != null && !requestLine.isEmpty()) {
                 final var parts = requestLine.split(" ");
                 if (parts.length != 3) {
                     // just close socket
@@ -49,9 +49,16 @@ public class ServerConnection implements Runnable {
                 }
                 System.out.println(request);
                 if ("POST".equalsIgnoreCase(request.getMethod())) {
-                    System.out.println("POST");
-                    System.out.println(request.getPostParams());
-                    System.out.println(request.getPostParam("value"));
+                    if ("x-www-form-urlencoded".equalsIgnoreCase(request.getHeaderByName("Content-Type").get())) {
+                        System.out.println("POST - x-www-form-urlencoded");
+                        System.out.println(request.getPostParams());
+                        System.out.println(request.getPostParam("value"));
+                    } else {
+                        System.out.println("POST - multipart/form-data");
+                        System.out.println(request.getParts());
+                        System.out.println("значения полей value");
+                        request.getPart("value").forEach(r -> System.out.println(r.getBody()));
+                    }
                 } else {
                     System.out.println("GET");
                     System.out.println(request.getQueryParams());
