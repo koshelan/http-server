@@ -14,21 +14,25 @@ import java.util.concurrent.Executors;
 public class Server {
 
     private static final int NUMBER_OF_THREADS = 64;
-    private int portNumber;
-    private static volatile Server server =null;
-    private Map<String,Map<String,Handler>> handlers = new ConcurrentHashMap<>();
+    private static volatile Server server = null;
+    private final int portNumber;
+    private final Map<String, Map<String, Handler>> handlers = new ConcurrentHashMap<>();
 
     public Server(int portNumber) {
-        this.portNumber= portNumber;
-        this.server = this;
+        this.portNumber = portNumber;
+        server = this;
         fillINBasicHandlers();
+    }
+
+    public static Server getInstance() {
+        return server;
     }
 
     public void run() {
         ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
         try (final var serverSocket = new ServerSocket(portNumber)) {
             while (true) {
-                try  {
+                try {
                     final var socket = serverSocket.accept();
                     executorService.execute(new ServerConnection(socket));
                 } catch (Exception e) {
@@ -41,33 +45,28 @@ public class Server {
         executorService.shutdown();
     }
 
-    public void handlerRequest(Request request, BufferedOutputStream out)  {
+    public void handlerRequest(Request request, BufferedOutputStream out) {
         try {
-        if (handlers.containsKey(request.getMethod())){
-            if (handlers.get(request.getMethod()).containsKey(request.getPath())){
-                    handlers.get(request.getMethod()).get(request.getPath()).handle(request,out);
-                return;
+            if (handlers.containsKey(request.getMethod())) {
+                if (handlers.get(request.getMethod()).containsKey(request.getPath())) {
+                    handlers.get(request.getMethod()).get(request.getPath()).handle(request, out);
+                    return;
+                }
             }
-        }
-        handlers.get("").get("").handle(request,out);
+            handlers.get("").get("").handle(request, out);
         } catch (IOException e) {
-                e.printStackTrace();
-            }
+            e.printStackTrace();
+        }
     }
-
 
     public void addHandler(String method, String path, Handler handler) {
-        if (!handlers.containsKey(method)){
+        if (!handlers.containsKey(method)) {
             handlers.put(method, new ConcurrentHashMap<>());
         }
-        handlers.get(method).put(path,handler);
+        handlers.get(method).put(path, handler);
     }
 
-    public static Server getInstance(){
-        return server;
-    }
-
-    void fillINBasicHandlers(){
+    void fillINBasicHandlers() {
         addHandler("", "", new Handler() {
             @Override
             public void handle(Request request, BufferedOutputStream out) throws IOException {
@@ -100,16 +99,16 @@ public class Server {
             }
         };
 
-        addHandler("GET","/index.html",handler);
-        addHandler("GET","/spring.svg",handler);
-        addHandler("GET","/spring.png",handler);
-        addHandler("GET","/resources.html",handler);
-        addHandler("GET","/styles.css",handler);
-        addHandler("GET","/app.js",handler);
-        addHandler("GET","/links.html",handler);
-        addHandler("GET","/forms.html",handler);
-        addHandler("GET","/events.html",handler);
-        addHandler("GET","/events.js",handler);
+        addHandler("GET", "/index.html", handler);
+        addHandler("GET", "/spring.svg", handler);
+        addHandler("GET", "/spring.png", handler);
+        addHandler("GET", "/resources.html", handler);
+        addHandler("GET", "/styles.css", handler);
+        addHandler("GET", "/app.js", handler);
+        addHandler("GET", "/links.html", handler);
+        addHandler("GET", "/forms.html", handler);
+        addHandler("GET", "/events.html", handler);
+        addHandler("GET", "/events.js", handler);
 
         addHandler("GET", "/classic.html", new Handler() {
             @Override

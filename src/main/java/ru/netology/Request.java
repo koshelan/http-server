@@ -88,4 +88,24 @@ public class Request {
                       .findFirst();
     }
 
+    public List<String> getPostParams() {
+        return getHeaderByName("Content-Type").isPresent()
+                       && ("application/x-www-form-urlencoded").equalsIgnoreCase(getHeaderByName("Content-Type").get())
+               ? Arrays.stream(body.split("&"))
+                       .collect(Collectors.toList())
+               : null;
+    }
+
+    public List<String> getPostParam(String name) {
+        return getHeaderByName("Content-Type").isPresent()
+                       && ("application/x-www-form-urlencoded").equalsIgnoreCase(getHeaderByName("Content-Type").get())
+               ? Arrays.stream(body.split("&"))
+                       .filter(o -> o.startsWith(name))
+                       .map(o -> o.substring(name.length() + 1))
+                       .map(String::trim)
+                       .map(o -> URLDecoder.decode(o, StandardCharsets.UTF_8))
+                       .collect(Collectors.toList())
+               : null;
+    }
+
 }
